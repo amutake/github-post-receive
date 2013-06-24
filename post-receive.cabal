@@ -21,6 +21,5 @@ executable post-receive
   -- other-modules:
   build-depends:       base ==4.6.*
                      , process
-                     , safe
                      , scotty
                      , transformers
