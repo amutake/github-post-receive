@@ -19,7 +19,7 @@ executable post-receive
   hs-source-dirs:    src
   main-is:           main.hs
   -- other-modules:
-  build-depends:       base ==4.6.*
+  build-depends:       base
                      , aeson
                      , bytestring
                      , process
