@@ -10,15 +10,15 @@ import Network.HTTP.Types
 import System.Cmd
 import Web.Scotty
 
-import Conf
+import Config
 import Message
 
-receiver :: [Conf] -> ScottyM ()
-receiver confs = do
+receiver :: [Config] -> ScottyM ()
+receiver configs = do
     get "/" $ html "<h1>Post Receive Server</h1>"
-    mapM_ receiver' confs
+    mapM_ receiver' configs
   where
-    receiver' (Conf name paths) = do
+    receiver' (Config name paths) = do
         let route = fromString $ '/' : name
         post route $ do
             str <- body
