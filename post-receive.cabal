@@ -20,4 +20,7 @@ executable post-receive
   main-is:           main.hs
   -- other-modules:
   build-depends:       base ==4.6.*
+                     , process
+                     , safe
                      , scotty
+                     , transformers
