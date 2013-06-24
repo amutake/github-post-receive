@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Receiver where
 
 import Control.Monad.IO.Class (liftIO)
@@ -8,7 +10,9 @@ import Web.Scotty
 import Conf
 
 receiver :: [Conf] -> ScottyM ()
-receiver = mapM_ receiver'
+receiver confs = do
+    get "/" $ html "<h1>Post Recieve Server</h1>"
+    mapM_ receiver' confs
   where
     receiver' (Conf name paths) = do
         let route = fromString $ '/' : name
