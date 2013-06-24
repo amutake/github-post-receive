@@ -2,6 +2,8 @@
 
 module Message where
 
+import Control.Applicative
+import Data.Aeson
 import Data.Aeson.TH
 import Data.Data
 
@@ -17,7 +19,14 @@ data User = User
     , userEmail :: Maybe String
     , userUsername :: Maybe String
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveJSON (dataFieldToKeyName "user") ''User
+
+instance FromJSON User where
+    parseJSON (Object o) = User
+        <$> o .: "name"
+        <*> o .:? "email"
+        <*> o .:? "username"
+    parseJSON _ = fail "User must be an object"
+deriveToJSON (dataFieldToKeyName "user") ''User
 
 data Repository = Repository
     { repoId :: Int
