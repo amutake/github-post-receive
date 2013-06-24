@@ -21,6 +21,7 @@ executable post-receive
   -- other-modules:
   build-depends:       base ==4.6.*
                      , aeson
+                     , bytestring
                      , process
                      , scotty
                      , transformers
