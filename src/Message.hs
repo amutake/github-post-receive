@@ -14,8 +14,8 @@ type Language = String
 
 data User = User
     { userName :: String
-    , userEmail :: String
-    , userUsername :: String
+    , userEmail :: Maybe String
+    , userUsername :: Maybe String
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
 deriveJSON (dataFieldToKeyName "user") ''User
 
