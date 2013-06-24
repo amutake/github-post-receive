@@ -26,13 +26,13 @@ instance FromJSON User where
         <*> o .:? "email"
         <*> o .:? "username"
     parseJSON _ = fail "User must be an object"
-deriveToJSON (dataFieldToKeyName "user") ''User
 
 data Repository = Repository
     { repoId :: Int
     , repoName :: String
     , repoUrl :: URL
     , repoDescription :: String
+    , repoHomepage :: Maybe URL
     , repoWatchers :: Int
     , repoStargazers :: Int
     , repoForks :: Int
@@ -49,7 +49,30 @@ data Repository = Repository
     , repoPushed_at :: Int
     , repoMaster_branch :: String
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveJSON (dataFieldToKeyName "repo") ''Repository
+
+instance FromJSON Repository where
+    parseJSON (Object o) = Repository
+        <$> o .: "id"
+        <*> o .: "name"
+        <*> o .: "url"
+        <*> o .: "description"
+        <*> o .:? "homepage"
+        <*> o .: "watchers"
+        <*> o .: "stargazers"
+        <*> o .: "forks"
+        <*> o .: "fork"
+        <*> o .: "size"
+        <*> o .: "owner"
+        <*> o .: "private"
+        <*> o .: "open_issues"
+        <*> o .: "has_issues"
+        <*> o .: "has_downloads"
+        <*> o .: "has_wiki"
+        <*> o .: "language"
+        <*> o .: "created_at"
+        <*> o .: "pushed_at"
+        <*> o .: "master_branch"
+    parseJSON _ = fail "Repository must be an object"
 
 data Commit = Commit
     { commitId :: HashString
@@ -63,7 +86,7 @@ data Commit = Commit
     , commitRemoved :: [FilePath]
     , commitModified :: [FilePath]
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveJSON (dataFieldToKeyName "commit") ''Commit
+deriveFromJSON (dataFieldToKeyName "commit") ''Commit
 
 data Message = Message
     { messageRef :: FilePath
@@ -78,4 +101,4 @@ data Message = Message
     , messageRepository :: Repository
     , messagePusher :: User
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveJSON (dataFieldToKeyName "message") ''Message
+deriveFromJSON (dataFieldToKeyName "message") ''Message
