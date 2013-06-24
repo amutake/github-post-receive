@@ -3,26 +3,29 @@
 
 name:                post-receive
 version:             0.1.0.0
-synopsis:            post-receive hooks
--- description:
+synopsis:            A server of github web hooks
+description:         A server of github web hooks.
 homepage:            http://github.com/amkkun/post-receive
 license:             BSD3
 license-file:        LICENSE
-author:              amkkun
+author:              Shohei YASUTAKE
 maintainer:          amkkun@gmail.com
--- copyright:
+copyright:           Copyright (C) 2013 Shohei YASUTAKE
 category:            Web
 build-type:          Simple
 cabal-version:       >=1.8
 
+source-repository head
+  type: git
+  location: git://github.com/amkkun/post-receive.git
+
 executable post-receive
   hs-source-dirs:    src
   main-is:           main.hs
-  -- other-modules:
-  build-depends:       base
-                     , aeson
+  build-depends:       base >= 4 && < 5
+                     , aeson >= 0.6.1
                      , bytestring >= 0.10
-                     , http-types
-                     , process
-                     , scotty
-                     , transformers
+                     , http-types >= 0.6
+                     , process >= 1.0
+                     , scotty >= 0.3
+                     , transformers >= 0.2
