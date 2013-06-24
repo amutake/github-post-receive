@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
 module Receiver where
 
@@ -8,6 +8,7 @@ import System.Cmd
 import Web.Scotty
 
 import Conf
+import Message
 
 receiver :: [Conf] -> ScottyM ()
 receiver confs = do
@@ -17,6 +18,6 @@ receiver confs = do
     receiver' (Conf name paths) = do
         let route = fromString $ '/' : name
         post route $ do
-            b <- body
-            liftIO $ print b
+            (msg :: Message) <- jsonData
+            liftIO $ print msg
             liftIO $ mapM_ system paths
