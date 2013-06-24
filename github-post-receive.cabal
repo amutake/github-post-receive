@@ -1,8 +1,8 @@
-name:                post-receive
+name:                github-post-receive
 version:             0.1.0.0
 synopsis:            github web hooks server
 description:         This is a server of github web hooks.
-homepage:            http://github.com/amkkun/post-receive
+homepage:            http://github.com/amkkun/github-post-receive
 license:             BSD3
 license-file:        LICENSE
 author:              Shohei Yasutake
@@ -14,9 +14,9 @@ cabal-version:       >=1.8
 
 source-repository head
   type: git
-  location: git://github.com/amkkun/post-receive.git
+  location: git://github.com/amkkun/github-post-receive.git
 
-executable post-receive
+executable github-post-receive
   hs-source-dirs:    src
   main-is:           main.hs
   build-depends:       base == 4.*
