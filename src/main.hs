@@ -6,6 +6,7 @@ import Web.Scotty
 
 import Config
 import Receiver
+import Util
 
 type Port = Int
 
@@ -17,7 +18,9 @@ main = do
     let result = parseConfig str
     case result of
         Left err -> print err
-        Right configs -> scotty port $ receiver configs
+        Right configs -> do
+          logMessage $ "github-post-receive listening on port " ++ show port ++ " with config " ++ path
+          scotty port $ receiver configs
 
 checkArgs :: [String] -> IO (Port, FilePath)
 checkArgs [port, path] = return (read port, path)
