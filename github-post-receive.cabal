@@ -23,6 +23,8 @@ executable github-post-receive
                      , aeson >= 0.6.1
                      , bytestring >= 0.10
                      , http-types >= 0.6
+                     , old-locale
                      , process >= 1.0
                      , scotty >= 0.3
+                     , time
                      , transformers >= 0.2

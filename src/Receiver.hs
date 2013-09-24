@@ -6,8 +6,12 @@ import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import Data.String
+import Data.Time.LocalTime
+import Data.Time.Format
 import Network.HTTP.Types
 import System.Cmd
+import System.Locale
+import Text.Printf
 import Web.Scotty
 
 import Config
@@ -21,6 +25,9 @@ receiver configs = do
     receiver' (Config name paths) = do
         let route = fromString $ '/' : name
         post route $ do
+            liftIO $ do
+              t <- getZonedTime
+              printf "[%s] POST /%s\n" (formatTime defaultTimeLocale "%d/%b/%Y %T %z" t) name
             str <- body
             case dec str of
                 Left msg -> liftIO $ putStrLn msg
