@@ -12,6 +12,7 @@ import Web.Scotty
 
 import Config
 import Message
+import Util
 
 receiver :: [Config] -> ScottyM ()
 receiver configs = do
@@ -21,6 +22,7 @@ receiver configs = do
     receiver' (Config name paths) = do
         let route = fromString $ '/' : name
         post route $ do
+            liftIO $ logMessage $ "POST /" ++ name
             str <- body
             case dec str of
                 Left msg -> liftIO $ putStrLn msg
