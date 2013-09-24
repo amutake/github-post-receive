@@ -3,6 +3,7 @@ module Util where
 import Data.Char
 import Data.Time.LocalTime
 import Data.Time.Format
+import System.IO (hFlush,stdout)
 import System.Locale
 import Text.Printf
 
@@ -17,3 +18,5 @@ logMessage :: String -> IO ()
 logMessage s = do
   t <- getZonedTime
   putStrLn $ formatTime defaultTimeLocale "[%d/%b/%Y %T %z] " t ++ s
+  hFlush stdout
+
