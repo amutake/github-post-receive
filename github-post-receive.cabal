@@ -1,5 +1,5 @@
 name:                github-post-receive
-version:             1.0.0.0
+version:             1.0.1.0
 synopsis:            Github post-receive server library
 description:         This is a library to construct a github post-receive server.
 homepage:            https://github.com/amutake/github-post-receive
@@ -17,7 +17,8 @@ source-repository head
   location:          git://github.com/amutake/github-post-receive.git
 
 library
-  exposed-modules:   Github.PostReceive.Types
+  exposed-modules:   Github.PostReceive
+                   , Github.PostReceive.Types
                    , Github.PostReceive.Server
   hs-source-dirs:    src
   build-depends:     base ==4.*
