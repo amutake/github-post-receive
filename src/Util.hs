@@ -5,7 +5,6 @@ import Data.Time.LocalTime
 import Data.Time.Format
 import System.IO (hFlush,stdout)
 import System.Locale
-import Text.Printf
 
 lowerCamelCase :: String -> String
 lowerCamelCase "" = ""

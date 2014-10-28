@@ -24,4 +24,4 @@ main = do
 
 checkArgs :: [String] -> IO (Port, FilePath)
 checkArgs [port, path] = return (read port, path)
-checkArgs _ = putStrLn "post-receive port conf" >> exitFailure
+checkArgs _ = putStrLn "github-post-receive PORT CONF" >> exitFailure

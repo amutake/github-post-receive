@@ -86,7 +86,7 @@ data Commit = Commit
     , commitRemoved :: [FilePath]
     , commitModified :: [FilePath]
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveFromJSON (dataFieldToKeyName "commit") ''Commit
+deriveFromJSON defaultOptions{fieldLabelModifier=dataFieldToKeyName "commit"} ''Commit
 
 data Message = Message
     { messageRef :: FilePath
@@ -101,4 +101,4 @@ data Message = Message
     , messageRepository :: Repository
     , messagePusher :: User
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveFromJSON (dataFieldToKeyName "message") ''Message
+deriveFromJSON defaultOptions{fieldLabelModifier=dataFieldToKeyName "message"} ''Message

@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import Data.String
 import Network.HTTP.Types
-import System.Cmd
+import System.Process
 import Web.Scotty
 
 import Config

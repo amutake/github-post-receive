@@ -13,7 +13,7 @@ data Config = Config
     { configName :: String
     , configScripts :: [FilePath]
     } deriving (Show, Read, Eq, Ord, Data, Typeable)
-deriveJSON (dataFieldToKeyName "config") ''Config
+deriveJSON defaultOptions{fieldLabelModifier=dataFieldToKeyName "config"} ''Config
 
 parseConfig :: String -> Either String [Config]
 parseConfig = eitherDecode . B.pack
