@@ -377,7 +377,7 @@ instance FromJSON StatusCommit where
         <*> o .: "commit"
         <*> o .: "url"
         <*> o .: "html_url"
-        <*> o .: "comment_url"
+        <*> o .: "comments_url"
         <*> o .: "author"
         <*> o .: "committer"
         <*> o .: "parents"
