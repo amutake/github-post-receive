@@ -10,8 +10,14 @@ import Data.Aeson (decode)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as M
-import Network.HTTP.Types (ok200, badRequest400, notFound404, urlDecode, methodPost, hContentType)
-import Network.Wai (strictRequestBody, responseLBS, Application, rawPathInfo, requestMethod, requestHeaders)
+import Network.HTTP.Types
+    ( ok200, badRequest400, notFound404, internalServerError500
+    , urlDecode, methodPost, hContentType
+    )
+import Network.Wai
+    ( strictRequestBody, responseLBS, Application
+    , rawPathInfo, requestMethod, requestHeaders
+    )
 import Network.Wai.Handler.Warp (run, Port)
 import Network.Wai.Logger (withStdoutLogger, ApacheLogger)
 
@@ -44,11 +50,12 @@ app aplogger routes req respond
     res status = aplogger req status Nothing >> respond (responseLBS status [] BL.empty)
     notFound = res notFound404
     badRequest = res badRequest400
+    internalError = res internalServerError500
     ok = res ok200
     jsonCase cont = do
         bs <- strictRequestBody req
-        flip (maybe badRequest) (decode bs) $ \payload -> cont payload >> ok
+        flip (maybe internalError) (decode bs) $ \payload -> cont payload >> ok
     formCase cont = do
         bs <- BL.drop (BL.length "payload=") <$> strictRequestBody req
-        flip (maybe badRequest) (decode $ BL.fromStrict $ urlDecode True $ BL.toStrict bs) $ \payload ->
+        flip (maybe internalError) (decode $ BL.fromStrict $ urlDecode True $ BL.toStrict bs) $ \payload ->
             cont payload >> ok
