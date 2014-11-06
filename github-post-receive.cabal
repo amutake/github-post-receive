@@ -1,7 +1,7 @@
 name:                github-post-receive
-version:             1.0.1.0
+version:             1.0.2.0
 synopsis:            Github post-receive server library
-description:         This is a library to construct a github post-receive server.
+description:         This is a library to construct github post-receive servers.
 homepage:            https://github.com/amutake/github-post-receive
 license:             BSD3
 license-file:        LICENSE
