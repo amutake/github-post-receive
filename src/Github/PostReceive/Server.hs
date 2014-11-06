@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Github.PostReceive.Server
     ( start
     , app
@@ -8,8 +10,8 @@ import Data.Aeson (decode)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as M
-import Network.HTTP.Types (ok200, badRequest400, notFound404, urlDecode, methodPost)
-import Network.Wai (requestBody, responseLBS, Application, rawPathInfo, requestMethod)
+import Network.HTTP.Types (ok200, badRequest400, notFound404, urlDecode, methodPost, hContentType)
+import Network.Wai (strictRequestBody, responseLBS, Application, rawPathInfo, requestMethod, requestHeaders)
 import Network.Wai.Handler.Warp (run, Port)
 import Network.Wai.Logger (withStdoutLogger, ApacheLogger)
 
@@ -29,16 +31,24 @@ start port routes = do
 
 app :: ApacheLogger -> M.Map B.ByteString (Payload -> IO ()) -> Application
 app aplogger routes req respond
-    | method == methodPost = do
-        bs <- B.drop (length "payload=") <$> requestBody req
-        flip (maybe notFound) (M.lookup path routes) $ \cont ->
-            flip (maybe badRequest) (decode $ BL.fromStrict $ urlDecode True bs) $ \payload ->
-                cont payload >> ok
+    | method == methodPost = flip (maybe notFound) (M.lookup path routes) $ \cont ->
+        case contentType of
+            Just "application/json" -> jsonCase cont
+            Just "application/x-www-form-urlencoded" -> formCase cont
+            _ -> badRequest
     | otherwise = notFound
   where
     path = rawPathInfo req
     method = requestMethod req
+    contentType = lookup hContentType $ requestHeaders req
     res status = aplogger req status Nothing >> respond (responseLBS status [] BL.empty)
     notFound = res notFound404
     badRequest = res badRequest400
     ok = res ok200
+    jsonCase cont = do
+        bs <- strictRequestBody req
+        flip (maybe badRequest) (decode bs) $ \payload -> cont payload >> ok
+    formCase cont = do
+        bs <- BL.drop (BL.length "payload=") <$> strictRequestBody req
+        flip (maybe badRequest) (decode $ BL.fromStrict $ urlDecode True $ BL.toStrict bs) $ \payload ->
+            cont payload >> ok
