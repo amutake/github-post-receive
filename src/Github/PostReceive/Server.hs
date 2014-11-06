@@ -16,8 +16,16 @@ import Network.Wai.Logger (withStdoutLogger, ApacheLogger)
 import Github.PostReceive.Types (Payload)
 
 start :: Port -> M.Map B.ByteString (Payload -> IO ()) -> IO ()
-start port routes = withStdoutLogger $ \aplogger ->
-    run port (app aplogger routes)
+start port routes = do
+    putStrLn startingMessage
+    withStdoutLogger $ run port . flip app routes
+  where
+    startingMessage = concat
+        [ "github-post-receive listening on port "
+        , show port
+        , " with path "
+        , show $ M.keys routes
+        ]
 
 app :: ApacheLogger -> M.Map B.ByteString (Payload -> IO ()) -> Application
 app aplogger routes req respond
