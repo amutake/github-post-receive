@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Github.PostReceive.Types
     ( Payload (..)
