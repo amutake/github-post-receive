@@ -11,6 +11,11 @@ module Github.PostReceive.Types
     , SimpleUser (..)
     , Branch (..)
     , SimpleCommit (..)
+    , StatusCommit (..)
+    , SimpleStatusCommit (..)
+    , Tree (..)
+    , Or (..)
+    , toEither
       -- Re-exports
     , EmailAddress
     ) where
@@ -72,7 +77,7 @@ data StatusEvent = StatusEvent
     , statusEventContext :: Text
     , statusEventDescription :: Text
     , statusEventState :: Text
-    , statusEventCommit :: Commit
+    , statusEventCommit :: StatusCommit
     , statusEventBranches :: [Branch]
     , statusEventCreatedAt :: Text -- TODO: Change to date type
     , statusEventUpdatedAt :: Text -- TODO: Change to date type
@@ -313,6 +318,7 @@ data SimpleUser = SimpleUser
     { simpleUserName :: Text
     , simpleUserEmail :: Maybe EmailAddress
     , simpleUserUsername :: Maybe Text
+    , simpleUserDate :: Maybe Text
     } deriving (Show, Eq, Typeable)
 
 instance FromJSON SimpleUser where
@@ -320,6 +326,7 @@ instance FromJSON SimpleUser where
         <$> o .: "name"
         <*> o .:? "email"
         <*> o .:? "username"
+        <*> o .:? "date"
     parseJSON _ = fail "SimpleUser must be an object"
 
 instance FromJSON EmailAddress where
@@ -342,13 +349,69 @@ instance FromJSON Branch where
 data SimpleCommit = SimpleCommit
     { simpleCommitSha :: Text
     , simpleCommitUrl :: Url
+    , simpleCommitHtmlUrl :: Maybe Url
     } deriving (Show, Eq, Typeable)
 
 instance FromJSON SimpleCommit where
     parseJSON (Object o) = SimpleCommit
         <$> o .: "sha"
         <*> o .: "url"
+        <*> o .:? "html_url"
     parseJSON _ = fail "SimpleCommit must be an object"
+
+-- | used in StatusEvent
+data StatusCommit = StatusCommit
+    { statusCommitSHA :: Text
+    , statusCommitCommit :: SimpleStatusCommit
+    , statusCommitUrl :: Url
+    , statusCommitHtmlUrl :: Url
+    , statusCommitCommentsUrl :: Url
+    , statusCommitAuthor :: User
+    , statusCommitCommitter :: User
+    , statusCommitParents :: [SimpleCommit]
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON StatusCommit where
+    parseJSON (Object o) = StatusCommit
+        <$> o .: "sha"
+        <*> o .: "commit"
+        <*> o .: "url"
+        <*> o .: "html_url"
+        <*> o .: "comment_url"
+        <*> o .: "author"
+        <*> o .: "committer"
+        <*> o .: "parents"
+    parseJSON _ = fail "StatusCommit must be an object"
+
+data SimpleStatusCommit = SimpleStatusCommit
+    { simpleStatusCommitAuthor :: SimpleUser
+    , simpleStatusCommitCommitter :: SimpleUser
+    , simpleStatusCommitMessage :: Text
+    , simpleStatusCommitTree :: Tree
+    , simpleStatusCommitUrl :: Url
+    , simpleStatusCommitCommentCount :: Int
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON SimpleStatusCommit where
+    parseJSON (Object o) = SimpleStatusCommit
+        <$> o .: "author"
+        <*> o .: "committer"
+        <*> o .: "message"
+        <*> o .: "tree"
+        <*> o .: "url"
+        <*> o .: "comment_count"
+    parseJSON _ = fail "SimpleStatusCommit must be an object"
+
+data Tree = Tree
+    { treeSHA :: Text
+    , treeUrl :: Url
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON Tree where
+    parseJSON (Object o) = Tree
+        <$> o .: "sha"
+        <*> o .: "url"
+    parseJSON _ = fail "Tree must be an object"
 
 type Url = Text
 
@@ -358,3 +421,7 @@ data Or a b = L a | R b deriving (Show, Eq, Typeable)
 
 instance (FromJSON a, FromJSON b) => FromJSON (Or a b) where
     parseJSON v = L <$> parseJSON v <|> R <$> parseJSON v
+
+toEither :: Or a b -> Either a b
+toEither (L a) = Left a
+toEither (R b) = Right b
