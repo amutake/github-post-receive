@@ -3,58 +3,109 @@
 
 module Github.PostReceive.Types
     ( Payload (..)
+    , PushEvent (..)
+    , StatusEvent (..)
     , Commit (..)
     , Repository (..)
     , User (..)
+    , SimpleUser (..)
+    , Branch (..)
+    , SimpleCommit (..)
       -- Re-exports
     , EmailAddress
     ) where
 
-import Control.Applicative ((<$>), (<*>), pure)
+import Control.Applicative ((<$>), (<*>), pure, (<|>))
 import Data.Aeson (Value (..), FromJSON (..), (.:), (.:?))
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Typeable (Typeable)
 import Text.Email.Validate (EmailAddress, emailAddress)
 
-data Payload = Payload
-    { payloadRef :: Text
-    , payloadAfter :: Text
-    , payloadBefore :: Text
-    , payloadCreated :: Bool
-    , payloadDeleted :: Bool
-    , payloadForced :: Bool
-    , payloadCompare :: Text
-    , payloadCommits :: [Commit]
-    , payloadHeadCommit :: Commit
-    , payloadRepository :: Repository
-    , payloadPusher :: User
-    } deriving (Show, Eq, Typeable)
+data Payload = Push PushEvent
+             | Status StatusEvent
+             deriving (Show, Eq, Typeable)
 
 instance FromJSON Payload where
-    parseJSON (Object o) = Payload
+    parseJSON v = Push <$> parseJSON v
+              <|> Status <$> parseJSON v
+
+data PushEvent = PushEvent
+    { pushEventRef :: Text
+    , pushEventBefore :: Text
+    , pushEventAfter :: Text
+    , pushEventCreated :: Bool
+    , pushEventDeleted :: Bool
+    , pushEventForced :: Bool
+    , pushEventBaseRef :: Maybe Text
+    , pushEventCompare :: Url
+    , pushEventCommits :: [Commit]
+    , pushEventHeadCommit :: Commit
+    , pushEventRepository :: Repository
+    , pushEventPusher :: SimpleUser
+    , pushEventSender :: User
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON PushEvent where
+    parseJSON (Object o) = PushEvent
         <$> o .: "ref"
-        <*> o .: "after"
         <*> o .: "before"
+        <*> o .: "after"
         <*> o .: "created"
         <*> o .: "deleted"
         <*> o .: "forced"
+        <*> o .:? "base_ref"
         <*> o .: "compare"
         <*> o .: "commits"
         <*> o .: "head_commit"
         <*> o .: "repository"
         <*> o .: "pusher"
-    parseJSON _ = fail "Payload must be an object"
+        <*> o .: "sender"
+    parseJSON _ = fail "PushEvent must be an object"
+
+data StatusEvent = StatusEvent
+    { statusEventId :: Int
+    , statusEventSHA :: ByteString
+    , statusEventName :: Text
+    , statusEventTargetUrl :: Url
+    , statusEventContext :: ByteString
+    , statusEventDescription :: Text
+    , statusEventState :: ByteString
+    , statusEventCommit :: Commit
+    , statusEventBranches :: [Branch]
+    , statusEventCreatedAt :: ByteString -- TODO: Change to date type
+    , statusEventUpdatedAt :: ByteString -- TODO: Change to date type
+    , statusEventRepository :: Repository
+    , statusEventSender :: User
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON StatusEvent where
+    parseJSON (Object o) = StatusEvent
+        <$> o .: "id"
+        <*> o .: "sha"
+        <*> o .: "name"
+        <*> o .: "target_url"
+        <*> o .: "context"
+        <*> o .: "description"
+        <*> o .: "state"
+        <*> o .: "commit"
+        <*> o .: "branches"
+        <*> o .: "created_at"
+        <*> o .: "updated_at"
+        <*> o .: "repository"
+        <*> o .: "sender"
+    parseJSON _ = fail "StatusEvent must be an object"
 
 data Commit = Commit
     { commitId :: Text
     , commitDistinct :: Bool
     , commitMessage :: Text
     , commitTimestamp :: Text
-    , commitUrl :: Text
-    , commitAuthor :: User
-    , commitCommitter :: User
+    , commitUrl :: Url
+    , commitAuthor :: SimpleUser
+    , commitCommitter :: SimpleUser
     , commitAdded :: [FilePath]
     , commitRemoved :: [FilePath]
     , commitModified :: [FilePath]
@@ -77,65 +128,227 @@ instance FromJSON Commit where
 data Repository = Repository
     { repoId :: Int
     , repoName :: Text
-    , repoUrl :: Text
-    , repoDescription :: Text
-    , repoHomepage :: Maybe Text
-    , repoWatchers :: Int
-    , repoStargazers :: Int
-    , repoForks :: Int
-    , repoFork :: Bool
-    , repoSize :: Int
-    , repoOwner :: User
+    , repoFullName :: Text
+    , repoOwner :: Either SimpleUser User
     , repoPrivate :: Bool
-    , repoOpenIssues :: Int
+    , repoHtmlUrl :: Url
+    , repoDescription :: Text
+    , repoFork :: Bool
+      -- urls
+    , repoUrl :: Text
+    , repoForksUrl :: Url
+    , repoKeysUrl :: Url
+    , repoCollaboratorsUrl :: Url
+    , repoTeamsUrl :: Url
+    , repoHooksUrl :: Url
+    , repoIssueEventsUrl :: Url
+    , repoEventsUrl :: Url
+    , repoAssigneesUrl :: Url
+    , repoBranchesUrl :: Url
+    , repoTagsUrl :: Url
+    , repoBlobsUrl :: Url
+    , repoGitTagsUrl :: Url
+    , repoGitRefsUrl :: Url
+    , repoTreesUrl :: Url
+    , repoStatusesUrl :: Url
+    , repoLanguagesUrl :: Url
+    , repoStargazersUrl :: Url
+    , repoContributorsUrl :: Url
+    , repoSubscribersUrl :: Url
+    , repoSubscriptionUrl :: Url
+    , repoCommitsUrl :: Url
+    , repoGitCommitsUrl :: Url
+    , repoIssueCommentUrl :: Url
+    , repoContentsUrl :: Url
+    , repoCompareUrl :: Url
+    , repoMergesUrl :: Url
+    , repoArchiveUrl :: Url
+    , repoDownloadsUrl :: Url
+    , repoIssuesUrl :: Url
+    , repoPullsUrl :: Url
+    , repoMilestonesUrl :: Url
+    , repoNotificationsUrl :: Url
+    , repoLabelsUrl :: Url
+    , repoReleasesUrl :: Url
+      -- date
+    , repoCreatedAt :: Either Int ByteString -- Int or DateString
+    , repoUpdatedAt :: ByteString
+    , repoPushedAt :: Either Int ByteString -- Int or DateString
+    , repoGitUrl :: Url
+    , repoSshUrl :: Url
+    , repoCloneUrl :: Url
+    , repoSvnUrl :: Url
+    , repoHomepage :: Maybe Url
+    , repoSize :: Int
+    , repoStargazersCount :: Int
+    , repoWatchersCount :: Int
+    , repoLanguage :: Text
     , repoHasIssues :: Bool
     , repoHasDownloads :: Bool
     , repoHasWiki :: Bool
-    , repoLanguage :: Text
-    , repoCreatedAt :: Int
-    , repoPushedAt :: Int
-    , repoMasterBranch :: Text
+    , repoHasPages :: Bool
+    , repoForksCount :: Int
+    , repoMirrorUrl :: Maybe Url
+    , repoOpenIssuesCount :: Int
+      -- for compatiblity?
+    , repoForks :: Int
+    , repoOpenIssues :: Int
+    , repoWatchers :: Int
+    , repoStargazers :: Maybe Int
+    , repoMasterBranch :: Maybe Text
     } deriving (Show, Eq, Typeable)
 
 instance FromJSON Repository where
     parseJSON (Object o) = Repository
         <$> o .: "id"
         <*> o .: "name"
-        <*> o .: "url"
-        <*> o .: "description"
-        <*> o .:? "homepage"
-        <*> o .: "watchers"
-        <*> o .: "stargazers"
-        <*> o .: "forks"
-        <*> o .: "fork"
-        <*> o .: "size"
+        <*> o .: "full_name"
         <*> o .: "owner"
         <*> o .: "private"
-        <*> o .: "open_issues"
+        <*> o .: "html_url"
+        <*> o .: "description"
+        <*> o .: "fork"
+        <*> o .: "url"
+        <*> o .: "forks_url"
+        <*> o .: "keys_url"
+        <*> o .: "collaborators_url"
+        <*> o .: "teams_url"
+        <*> o .: "hooks_url"
+        <*> o .: "issue_events_url"
+        <*> o .: "events_url"
+        <*> o .: "assignees_url"
+        <*> o .: "branches_url"
+        <*> o .: "tags_url"
+        <*> o .: "blobs_url"
+        <*> o .: "git_tags_url"
+        <*> o .: "git_refs_url"
+        <*> o .: "trees_url"
+        <*> o .: "statuses_url"
+        <*> o .: "languages_url"
+        <*> o .: "stargazers_url"
+        <*> o .: "contributors_url"
+        <*> o .: "subscribers_url"
+        <*> o .: "subscription_url"
+        <*> o .: "commits_url"
+        <*> o .: "git_commits_url"
+        <*> o .: "issue_comment_url"
+        <*> o .: "contents_url"
+        <*> o .: "compare_url"
+        <*> o .: "merges_url"
+        <*> o .: "archive_url"
+        <*> o .: "downloads_url"
+        <*> o .: "issues_url"
+        <*> o .: "pulls_url"
+        <*> o .: "milestones_url"
+        <*> o .: "notifications_url"
+        <*> o .: "labels_url"
+        <*> o .: "releases_url"
+        <*> o .: "created_at"
+        <*> o .: "updated_at"
+        <*> o .: "pushed_at"
+        <*> o .: "git_url"
+        <*> o .: "ssh_url"
+        <*> o .: "clone_url"
+        <*> o .: "svn_url"
+        <*> o .:? "homepage"
+        <*> o .: "size"
+        <*> o .: "stargazers_count"
+        <*> o .: "watchers_count"
+        <*> o .: "language"
         <*> o .: "has_issues"
         <*> o .: "has_downloads"
         <*> o .: "has_wiki"
-        <*> o .: "language"
-        <*> o .: "created_at"
-        <*> o .: "pushed_at"
-        <*> o .: "master_branch"
+        <*> o .: "has_pages"
+        <*> o .: "forks_count"
+        <*> o .:? "mirror_url"
+        <*> o .: "open_issues_count"
+        <*> o .: "forks"
+        <*> o .: "open_issues"
+        <*> o .: "watchers"
+        <*> o .:? "stargazers"
+        <*> o .:? "master_branch"
     parseJSON _ = fail "Repository must be an object"
 
 data User = User
-    { userName :: Text
-    , userEmail :: Maybe EmailAddress
-    , userUsername :: Maybe Text
+    { userLogin :: Text
+    , userId :: Int
+    , userAvatarUrl :: Url
+    , userGravatarId :: Text
+    , userUrl :: Url
+    , userHtmlUrl :: Url
+    , userFollowersUrl :: Url
+    , userFollowingUrl :: Url
+    , userGistsUrl :: Url
+    , userStarredUrl :: Url
+    , userSubscriptionsUrl :: Url
+    , userOrganizationsUrl :: Url
+    , userReposUrl :: Url
+    , userEventsUrl :: Url
+    , userReceivedEventsUrl :: Url
+    , userType :: ByteString
+    , userSiteAdmin :: Bool
     } deriving (Show, Eq, Typeable)
 
 instance FromJSON User where
     parseJSON (Object o) = User
+        <$> o .: "login"
+        <*> o .: "id"
+        <*> o .: "avatar_url"
+        <*> o .: "gravatar_id"
+        <*> o .: "url"
+        <*> o .: "html_url"
+        <*> o .: "followers_url"
+        <*> o .: "following_url"
+        <*> o .: "gists_url"
+        <*> o .: "starred_url"
+        <*> o .: "subscriptions_url"
+        <*> o .: "organizations_url"
+        <*> o .: "repos_url"
+        <*> o .: "events_url"
+        <*> o .: "received_events_url"
+        <*> o .: "type"
+        <*> o .: "site_admin"
+    parseJSON _ = fail "User must be an object"
+
+data SimpleUser = SimpleUser
+    { simpleUserName :: Text
+    , simpleUserEmail :: Maybe EmailAddress
+    , simpleUserUsername :: Maybe Text
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON SimpleUser where
+    parseJSON (Object o) = SimpleUser
         <$> o .: "name"
         <*> o .:? "email"
         <*> o .:? "username"
-    parseJSON _ = fail "User must be an object"
+    parseJSON _ = fail "SimpleUser must be an object"
 
 instance FromJSON EmailAddress where
     parseJSON (String t) = case emailAddress $ B.pack . T.unpack $ t of
         Just a -> pure a
         Nothing -> fail "failed to parse EmailAddress"
     parseJSON _ = fail "EmailAddress must be a text"
+
+data Branch = Branch
+    { branchName :: Text
+    , branchCommit :: SimpleCommit
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON Branch where
+    parseJSON (Object o) = Branch
+        <$> o .: "name"
+        <*> o .: "commit"
+    parseJSON _ = fail "Branch must be an object"
+
+data SimpleCommit = SimpleCommit
+    { simpleCommitSha :: ByteString
+    , simpleCommitUrl :: Url
+    } deriving (Show, Eq, Typeable)
+
+instance FromJSON SimpleCommit where
+    parseJSON (Object o) = SimpleCommit
+        <$> o .: "sha"
+        <*> o .: "url"
+    parseJSON _ = fail "SimpleCommit must be an object"
+
+type Url = ByteString
