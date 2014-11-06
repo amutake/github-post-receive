@@ -17,7 +17,6 @@ module Github.PostReceive.Types
 
 import Control.Applicative ((<$>), (<*>), pure, (<|>))
 import Data.Aeson (Value (..), FromJSON (..), (.:), (.:?))
-import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -67,16 +66,16 @@ instance FromJSON PushEvent where
 
 data StatusEvent = StatusEvent
     { statusEventId :: Int
-    , statusEventSHA :: ByteString
+    , statusEventSHA :: Text
     , statusEventName :: Text
     , statusEventTargetUrl :: Url
-    , statusEventContext :: ByteString
+    , statusEventContext :: Text
     , statusEventDescription :: Text
-    , statusEventState :: ByteString
+    , statusEventState :: Text
     , statusEventCommit :: Commit
     , statusEventBranches :: [Branch]
-    , statusEventCreatedAt :: ByteString -- TODO: Change to date type
-    , statusEventUpdatedAt :: ByteString -- TODO: Change to date type
+    , statusEventCreatedAt :: Text -- TODO: Change to date type
+    , statusEventUpdatedAt :: Text -- TODO: Change to date type
     , statusEventRepository :: Repository
     , statusEventSender :: User
     } deriving (Show, Eq, Typeable)
@@ -171,9 +170,9 @@ data Repository = Repository
     , repoLabelsUrl :: Url
     , repoReleasesUrl :: Url
       -- date
-    , repoCreatedAt :: Either Int ByteString -- Int or DateString
-    , repoUpdatedAt :: ByteString
-    , repoPushedAt :: Either Int ByteString -- Int or DateString
+    , repoCreatedAt :: Either Int Text -- Int or DateString
+    , repoUpdatedAt :: Text
+    , repoPushedAt :: Either Int Text -- Int or DateString
     , repoGitUrl :: Url
     , repoSshUrl :: Url
     , repoCloneUrl :: Url
@@ -285,7 +284,7 @@ data User = User
     , userReposUrl :: Url
     , userEventsUrl :: Url
     , userReceivedEventsUrl :: Url
-    , userType :: ByteString
+    , userType :: Text
     , userSiteAdmin :: Bool
     } deriving (Show, Eq, Typeable)
 
@@ -341,7 +340,7 @@ instance FromJSON Branch where
     parseJSON _ = fail "Branch must be an object"
 
 data SimpleCommit = SimpleCommit
-    { simpleCommitSha :: ByteString
+    { simpleCommitSha :: Text
     , simpleCommitUrl :: Url
     } deriving (Show, Eq, Typeable)
 
@@ -351,4 +350,4 @@ instance FromJSON SimpleCommit where
         <*> o .: "url"
     parseJSON _ = fail "SimpleCommit must be an object"
 
-type Url = ByteString
+type Url = Text
