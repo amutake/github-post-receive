@@ -11,14 +11,16 @@ import qualified Data.Map as M
 import Network.HTTP.Types (ok200, badRequest400, notFound404, urlDecode, methodPost)
 import Network.Wai (requestBody, responseLBS, Application, rawPathInfo, requestMethod)
 import Network.Wai.Handler.Warp (run, Port)
+import Network.Wai.Logger (withStdoutLogger, ApacheLogger)
 
 import Github.PostReceive.Types (Payload)
 
 start :: Port -> M.Map B.ByteString (Payload -> IO ()) -> IO ()
-start port = run port . app
+start port routes = withStdoutLogger $ \aplogger ->
+    run port (app aplogger routes)
 
-app :: M.Map B.ByteString (Payload -> IO ()) -> Application
-app routes req respond
+app :: ApacheLogger -> M.Map B.ByteString (Payload -> IO ()) -> Application
+app aplogger routes req respond
     | method == methodPost = do
         bs <- B.drop (length "payload=") <$> requestBody req
         flip (maybe notFound) (M.lookup path routes) $ \cont ->
@@ -28,6 +30,7 @@ app routes req respond
   where
     path = rawPathInfo req
     method = requestMethod req
-    notFound = respond (responseLBS notFound404 [] BL.empty)
-    badRequest = respond (responseLBS badRequest400 [] BL.empty)
-    ok = respond (responseLBS ok200 [] BL.empty)
+    res status = aplogger req status Nothing >> respond (responseLBS status [] BL.empty)
+    notFound = res notFound404
+    badRequest = res badRequest400
+    ok = res ok200
