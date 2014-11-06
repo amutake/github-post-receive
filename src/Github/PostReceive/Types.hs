@@ -128,7 +128,7 @@ data Repository = Repository
     { repoId :: Int
     , repoName :: Text
     , repoFullName :: Text
-    , repoOwner :: Either SimpleUser User
+    , repoOwner :: Or SimpleUser User
     , repoPrivate :: Bool
     , repoHtmlUrl :: Url
     , repoDescription :: Text
@@ -170,9 +170,9 @@ data Repository = Repository
     , repoLabelsUrl :: Url
     , repoReleasesUrl :: Url
       -- date
-    , repoCreatedAt :: Either Int Text -- Int or DateString
+    , repoCreatedAt :: Or Int Text -- Int or DateString
     , repoUpdatedAt :: Text
-    , repoPushedAt :: Either Int Text -- Int or DateString
+    , repoPushedAt :: Or Int Text -- Int or DateString
     , repoGitUrl :: Url
     , repoSshUrl :: Url
     , repoCloneUrl :: Url
@@ -351,3 +351,10 @@ instance FromJSON SimpleCommit where
     parseJSON _ = fail "SimpleCommit must be an object"
 
 type Url = Text
+
+-- | Or a b represents a or b
+-- The reason why we don't use Either type is that Either Int String type parses { "left": 1 } or { "right": "foo" }, but we want to parse 1 or "foo".
+data Or a b = L a | R b deriving (Show, Eq, Typeable)
+
+instance (FromJSON a, FromJSON b) => FromJSON (Or a b) where
+    parseJSON v = L <$> parseJSON v <|> R <$> parseJSON v
