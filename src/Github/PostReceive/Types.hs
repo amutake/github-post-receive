@@ -25,6 +25,7 @@ import Data.Aeson.Types (Parser)
 import qualified Data.ByteString.Char8 as B
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Data.Typeable (Typeable)
 import Text.Email.Validate (EmailAddress, emailAddress)
 
@@ -335,6 +336,10 @@ instance FromJSON EmailAddress where
         Nothing -> fail "failed to parse EmailAddress"
     parseJSON _ = fail "EmailAddress must be a text"
 
+instance FromJSON B.ByteString where
+    parseJSON (String t) = pure (T.encodeUtf8 t)
+    parseJSON _ = fail "ByteString must be a text"
+
 data Branch = Branch
     { branchName :: Text
     , branchCommit :: SimpleCommit
@@ -413,7 +418,7 @@ instance FromJSON Tree where
         <*> o .: "url"
     parseJSON _ = fail "Tree must be an object"
 
-type Url = Text
+type Url = B.ByteString
 
 -- | Or a b represents a or b
 -- The reason why we don't use Either type is that Either Int String type parses { "left": 1 } or { "right": "foo" }, but we want to parse 1 or "foo".
