@@ -14,14 +14,13 @@ module Github.PostReceive.Types
     , StatusCommit (..)
     , SimpleStatusCommit (..)
     , Tree (..)
-    , Or (..)
-    , toEither
       -- Re-exports
     , EmailAddress
     ) where
 
 import Control.Applicative ((<$>), (<*>), pure, (<|>))
-import Data.Aeson (Value (..), FromJSON (..), (.:), (.:?))
+import Data.Aeson (Value (..), FromJSON (..), (.:), (.:?), Object)
+import Data.Aeson.Types (Parser)
 import qualified Data.ByteString.Char8 as B
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -133,7 +132,7 @@ data Repository = Repository
     { repoId :: Int
     , repoName :: Text
     , repoFullName :: Text
-    , repoOwner :: Or SimpleUser User
+    , repoOwner :: Either SimpleUser User
     , repoPrivate :: Bool
     , repoHtmlUrl :: Url
     , repoDescription :: Text
@@ -175,9 +174,9 @@ data Repository = Repository
     , repoLabelsUrl :: Url
     , repoReleasesUrl :: Url
       -- date
-    , repoCreatedAt :: Or Int Text -- Int or DateString
+    , repoCreatedAt :: Either Int Text -- Int or DateString
     , repoUpdatedAt :: Text
-    , repoPushedAt :: Or Int Text -- Int or DateString
+    , repoPushedAt :: Either Int Text -- Int or DateString
     , repoGitUrl :: Url
     , repoSshUrl :: Url
     , repoCloneUrl :: Url
@@ -207,7 +206,7 @@ instance FromJSON Repository where
         <$> o .: "id"
         <*> o .: "name"
         <*> o .: "full_name"
-        <*> o .: "owner"
+        <*> o .:| "owner"
         <*> o .: "private"
         <*> o .: "html_url"
         <*> o .: "description"
@@ -247,9 +246,9 @@ instance FromJSON Repository where
         <*> o .: "notifications_url"
         <*> o .: "labels_url"
         <*> o .: "releases_url"
-        <*> o .: "created_at"
+        <*> o .:| "created_at"
         <*> o .: "updated_at"
-        <*> o .: "pushed_at"
+        <*> o .:| "pushed_at"
         <*> o .: "git_url"
         <*> o .: "ssh_url"
         <*> o .: "clone_url"
@@ -422,6 +421,8 @@ data Or a b = L a | R b deriving (Show, Eq, Typeable)
 instance (FromJSON a, FromJSON b) => FromJSON (Or a b) where
     parseJSON v = L <$> parseJSON v <|> R <$> parseJSON v
 
-toEither :: Or a b -> Either a b
-toEither (L a) = Left a
-toEither (R b) = Right b
+(.:|) :: (FromJSON a, FromJSON b) => Object -> Text -> Parser (Either a b)
+obj .:| key = toEither <$> (obj .: key)
+  where
+    toEither (L a) = Left a
+    toEither (R b) = Right b
