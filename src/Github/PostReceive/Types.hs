@@ -14,6 +14,7 @@ module Github.PostReceive.Types
     , StatusCommit (..)
     , SimpleStatusCommit (..)
     , Tree (..)
+    , Url
       -- Re-exports
     , EmailAddress
     ) where
