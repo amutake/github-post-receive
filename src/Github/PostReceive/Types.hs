@@ -16,6 +16,7 @@ module Github.PostReceive.Types
     , Tree (..)
     , Url
     , HashValue
+    , DateString
       -- Re-exports
     , EmailAddress
     ) where
@@ -82,8 +83,8 @@ data StatusEvent = StatusEvent
     , statusEventState :: Text
     , statusEventCommit :: StatusCommit
     , statusEventBranches :: [Branch]
-    , statusEventCreatedAt :: Text -- TODO: Change to date type
-    , statusEventUpdatedAt :: Text -- TODO: Change to date type
+    , statusEventCreatedAt :: DateString -- TODO: Change to date type
+    , statusEventUpdatedAt :: DateString -- TODO: Change to date type
     , statusEventRepository :: Repository
     , statusEventSender :: User
     } deriving (Show, Eq, Typeable)
@@ -109,7 +110,7 @@ data Commit = Commit
     { commitId :: HashValue
     , commitDistinct :: Bool
     , commitMessage :: Text
-    , commitTimestamp :: Text
+    , commitTimestamp :: DateString
     , commitUrl :: Url
     , commitAuthor :: SimpleUser
     , commitCommitter :: SimpleUser
@@ -178,9 +179,9 @@ data Repository = Repository
     , repoLabelsUrl :: Url
     , repoReleasesUrl :: Url
       -- date
-    , repoCreatedAt :: Either Int Text -- Int or DateString
-    , repoUpdatedAt :: Text
-    , repoPushedAt :: Either Int Text -- Int or DateString
+    , repoCreatedAt :: Either Int DateString -- Int or DateString
+    , repoUpdatedAt :: DateString
+    , repoPushedAt :: Either Int DateString -- Int or DateString
     , repoGitUrl :: Url
     , repoSshUrl :: Url
     , repoCloneUrl :: Url
@@ -321,7 +322,7 @@ data SimpleUser = SimpleUser
     { simpleUserName :: Text
     , simpleUserEmail :: Maybe EmailAddress
     , simpleUserUsername :: Maybe Text
-    , simpleUserDate :: Maybe Text
+    , simpleUserDate :: Maybe DateString
     } deriving (Show, Eq, Typeable)
 
 instance FromJSON SimpleUser where
@@ -423,6 +424,8 @@ instance FromJSON Tree where
 type Url = ByteString
 
 type HashValue = ByteString
+
+type DateString = ByteString
 
 -- | Or a b represents a or b
 -- The reason why we don't use Either type is that Either Int String type parses { "left": 1 } or { "right": "foo" }, but we want to parse 1 or "foo".
