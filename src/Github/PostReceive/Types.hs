@@ -15,6 +15,7 @@ module Github.PostReceive.Types
     , SimpleStatusCommit (..)
     , Tree (..)
     , Url
+    , HashValue
       -- Re-exports
     , EmailAddress
     ) where
@@ -22,6 +23,7 @@ module Github.PostReceive.Types
 import Control.Applicative ((<$>), (<*>), pure, (<|>))
 import Data.Aeson (Value (..), FromJSON (..), (.:), (.:?), Object)
 import Data.Aeson.Types (Parser)
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -39,12 +41,12 @@ instance FromJSON Payload where
 
 data PushEvent = PushEvent
     { pushEventRef :: Text
-    , pushEventBefore :: Text
-    , pushEventAfter :: Text
+    , pushEventBefore :: HashValue
+    , pushEventAfter :: HashValue
     , pushEventCreated :: Bool
     , pushEventDeleted :: Bool
     , pushEventForced :: Bool
-    , pushEventBaseRef :: Maybe Text
+    , pushEventBaseRef :: Maybe HashValue
     , pushEventCompare :: Url
     , pushEventCommits :: [Commit]
     , pushEventHeadCommit :: Commit
@@ -72,7 +74,7 @@ instance FromJSON PushEvent where
 
 data StatusEvent = StatusEvent
     { statusEventId :: Int
-    , statusEventSHA :: Text
+    , statusEventSha :: HashValue
     , statusEventName :: Text
     , statusEventTargetUrl :: Url
     , statusEventContext :: Text
@@ -104,7 +106,7 @@ instance FromJSON StatusEvent where
     parseJSON _ = fail "StatusEvent must be an object"
 
 data Commit = Commit
-    { commitId :: Text
+    { commitId :: HashValue
     , commitDistinct :: Bool
     , commitMessage :: Text
     , commitTimestamp :: Text
@@ -140,7 +142,7 @@ data Repository = Repository
     , repoDescription :: Text
     , repoFork :: Bool
       -- urls
-    , repoUrl :: Text
+    , repoUrl :: Url
     , repoForksUrl :: Url
     , repoKeysUrl :: Url
     , repoCollaboratorsUrl :: Url
@@ -352,7 +354,7 @@ instance FromJSON Branch where
     parseJSON _ = fail "Branch must be an object"
 
 data SimpleCommit = SimpleCommit
-    { simpleCommitSha :: Text
+    { simpleCommitSha :: HashValue
     , simpleCommitUrl :: Url
     , simpleCommitHtmlUrl :: Maybe Url
     } deriving (Show, Eq, Typeable)
@@ -366,7 +368,7 @@ instance FromJSON SimpleCommit where
 
 -- | used in StatusEvent
 data StatusCommit = StatusCommit
-    { statusCommitSHA :: Text
+    { statusCommitSha :: HashValue
     , statusCommitCommit :: SimpleStatusCommit
     , statusCommitUrl :: Url
     , statusCommitHtmlUrl :: Url
@@ -408,7 +410,7 @@ instance FromJSON SimpleStatusCommit where
     parseJSON _ = fail "SimpleStatusCommit must be an object"
 
 data Tree = Tree
-    { treeSHA :: Text
+    { treeSha :: HashValue
     , treeUrl :: Url
     } deriving (Show, Eq, Typeable)
 
@@ -418,7 +420,9 @@ instance FromJSON Tree where
         <*> o .: "url"
     parseJSON _ = fail "Tree must be an object"
 
-type Url = B.ByteString
+type Url = ByteString
+
+type HashValue = ByteString
 
 -- | Or a b represents a or b
 -- The reason why we don't use Either type is that Either Int String type parses { "left": 1 } or { "right": "foo" }, but we want to parse 1 or "foo".
