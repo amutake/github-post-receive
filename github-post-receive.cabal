@@ -1,11 +1,12 @@
 name:                github-post-receive
-version:             1.2.0.0
+version:             1.2.0.1
 synopsis:            GitHub webhooks library
 description:         This is a library to construct github webhooks servers.
                      .
                      Currently, this library supports following events:
                      .
                      * push
+                     .
                      * status
 homepage:            https://github.com/amutake/github-post-receive
 license:             BSD3
