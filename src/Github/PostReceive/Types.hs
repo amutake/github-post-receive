@@ -190,7 +190,7 @@ data Repository = Repository
     , repoSize :: Int
     , repoStargazersCount :: Int
     , repoWatchersCount :: Int
-    , repoLanguage :: Text
+    , repoLanguage :: Maybe Text
     , repoHasIssues :: Bool
     , repoHasDownloads :: Bool
     , repoHasWiki :: Bool
